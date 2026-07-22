@@ -118,6 +118,7 @@ import org.telegram.ui.bots.BotWebViewSheet;
 import org.telegram.ui.bots.WebViewRequestProps;
 import org.telegram.ui.community.CommunityChatType;
 import org.telegram.ui.community.CommunityUtils;
+import org.telegram.blorg.discovery.Discovery;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -22813,6 +22814,9 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public void openByUserName(String username, BaseFragment fragment, int type, Browser.Progress progress) {
+        if (!Discovery.allowResolveUsername()) {
+            return;
+        }
         if (username == null || fragment == null) {
             return;
         }

@@ -240,6 +240,7 @@ import org.telegram.ui.Stories.StoriesUtilities;
 import org.telegram.ui.Stories.StoryViewer;
 import org.telegram.ui.Stories.recorder.CaptionContainerView;
 import org.telegram.ui.Stories.recorder.DominantColors;
+import org.telegram.blorg.discovery.Discovery;
 
 import java.io.File;
 import java.util.ArrayList;

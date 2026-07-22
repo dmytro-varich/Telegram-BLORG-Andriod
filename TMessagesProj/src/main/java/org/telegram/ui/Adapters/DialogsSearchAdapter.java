@@ -68,6 +68,7 @@ import org.telegram.ui.Components.RLottieDrawable;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.DialogsActivity;
 import org.telegram.ui.FilteredSearchView;
+import org.telegram.blorg.discovery.Discovery;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1251,6 +1252,11 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                         return;
                     }
                     if (needMessagesSearch != 2 && dialogsType != DialogsActivity.DIALOGS_TYPE_GROUPS_ONLY && dialogsType != DialogsActivity.DIALOGS_TYPE_CHANNELS_ONLY && delegate.getSearchForumDialogId() == 0) {
+                        
+                        if (!Discovery.allowGlobalSearch()) {
+                            waitingResponseCount -= 2;
+                            return;
+                        }
                         searchAdapterHelper.queryServerSearch(
                             query,
                             true,
@@ -1279,7 +1285,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
 
             final String finalHashtag = hashtag;
 
-            if (finalHashtag != null) {
+            if (finalHashtag != null && Discovery.allowGlobalSearch()) {
                 waitingResponseCount++;
                 AndroidUtilities.runOnUIThread(searchHashtagRunnable = () -> {
                     searchHashtagRunnable = null;

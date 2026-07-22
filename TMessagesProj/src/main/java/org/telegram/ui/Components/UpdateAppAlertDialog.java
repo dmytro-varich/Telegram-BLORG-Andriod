@@ -33,6 +33,13 @@ import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
 
+import android.app.Activity;
+import android.text.TextUtils;
+import org.telegram.messenger.Emoji;
+import org.telegram.messenger.NotificationCenter;
+import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.BuildVars;
+
 public class UpdateAppAlertDialog extends BottomSheet {
 
     private TLRPC.TL_help_appUpdate appUpdate;
@@ -260,7 +267,13 @@ public class UpdateAppAlertDialog extends BottomSheet {
         messageTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         messageTextView.setMovementMethod(new AndroidUtilities.LinkMovementMethodMy());
         messageTextView.setLinkTextColor(Theme.getColor(Theme.key_dialogTextLink));
-        messageTextView.setText(LocaleController.formatString("AppUpdateVersionAndSize", R.string.AppUpdateVersionAndSize, appUpdate.version, AndroidUtilities.formatFileSize(appUpdate.document.size)));
+        
+        if (appUpdate.document == null) {
+            String versionStr = appUpdate.version != null ? appUpdate.version : "New";
+            messageTextView.setText("BLORG Update: Version " + versionStr);
+        } else {
+            messageTextView.setText(LocaleController.formatString("AppUpdateVersionAndSize", R.string.AppUpdateVersionAndSize, appUpdate.version, AndroidUtilities.formatFileSize(appUpdate.document.size)));
+        }
         messageTextView.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP);
         linearLayout.addView(messageTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 23, 0, 23, 5));
 
@@ -269,13 +282,14 @@ public class UpdateAppAlertDialog extends BottomSheet {
         changelogTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         changelogTextView.setMovementMethod(new AndroidUtilities.LinkMovementMethodMy());
         changelogTextView.setLinkTextColor(Theme.getColor(Theme.key_dialogTextLink));
+
         if (TextUtils.isEmpty(appUpdate.text)) {
             changelogTextView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.AppUpdateChangelogEmpty)));
         } else {
-            SpannableStringBuilder builder = new SpannableStringBuilder(appUpdate.text);
-            MessageObject.addEntitiesToText(builder, update.entities, false, false, false, false);
-            changelogTextView.setText(builder);
+            changelogTextView.setText(Emoji.replaceEmoji(appUpdate.text, changelogTextView.getPaint().getFontMetricsInt(), false));
+            NotificationCenter.listenEmojiLoading(changelogTextView);
         }
+
         changelogTextView.setGravity(Gravity.LEFT | Gravity.TOP);
         linearLayout.addView(changelogTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 23, 15, 23, 0));
 
@@ -290,7 +304,16 @@ public class UpdateAppAlertDialog extends BottomSheet {
         BottomSheetCell doneButton = new BottomSheetCell(context, false);
         doneButton.setText(LocaleController.formatString("AppUpdateDownloadNow", R.string.AppUpdateDownloadNow), false);
         doneButton.background.setOnClickListener(v -> {
-            FileLoader.getInstance(accountNum).loadFile(appUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
+            if (appUpdate.document == null) {
+                Activity activity = AndroidUtilities.findActivity(getContext());
+                if (activity != null) {
+                    org.telegram.messenger.browser.Browser.openUrl(activity, BuildVars.BLORG_DOWNLOAD_URL);
+                }
+                SharedConfig.pendingAppUpdate = null;
+                SharedConfig.saveConfig();
+            } else {
+                FileLoader.getInstance(accountNum).loadFile(appUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
+            }
             dismiss();
         });
         container.addView(doneButton, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 50, Gravity.LEFT | Gravity.BOTTOM, 0, 0, 0, 50));

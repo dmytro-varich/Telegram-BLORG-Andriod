@@ -109,7 +109,7 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            outputFileName = "app.apk"
+            outputFileName = "telegram_blorg.apk"
             output.versionCodeOverride = defaultConfig.versionCode * 10 + variant.productFlavors.get(0).abiVersionCode
         }
     }
@@ -120,6 +120,9 @@ android {
             setIgnore(true)
         }
     }
+
+    def blorgVersionUrl = System.getenv("BLORG_VERSION_URL") ?: "https://raw.githubusercontent.com/dmytro-varich/Telegram-BLORG-Android/blorg/version.txt"
+    def blorgDownloadUrl = System.getenv("BLORG_DOWNLOAD_URL") ?: "https://github.com/dmytro-varich/Telegram-BLORG-Android/releases/latest/download/telegram_blorg.apk"
 
     defaultConfig {
         minSdkVersion 21
@@ -137,6 +140,9 @@ android {
                 arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21' //, '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
             }
         }
+
+        buildConfigField "String", "BLORG_VERSION_URL", "\"${blorgVersionUrl}\""
+        buildConfigField "String", "BLORG_DOWNLOAD_URL", "\"${blorgDownloadUrl}\""
     }
 
     buildFeatures {

@@ -31,9 +31,21 @@ import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.SMSStatsActivity;
 import org.telegram.ui.SMSSubscribeSheet;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import androidx.core.app.NotificationCompat;
+import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.SharedConfig;
+
 import java.io.File;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class ApplicationLoaderImpl extends ApplicationLoader {
+
     @Override
     protected String onGetApplicationId() {
         return BuildConfig.APPLICATION_ID;
@@ -51,7 +63,88 @@ public class ApplicationLoaderImpl extends ApplicationLoader {
 
     @Override
     protected void checkForUpdatesInternal() {
+        Utilities.globalQueue.postRunnable(() -> {
+            try {
+                URL url = new URL(BuildConfig.BLORG_VERSION_URL);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(5000);
 
+                if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    String versionStr = reader.readLine();
+                    reader.close();
+
+                    if (versionStr != null) {
+                        int latestVersionCode = Integer.parseInt(versionStr.trim());
+                        int currentVersionCode = BuildConfig.VERSION_CODE;
+
+                        FileLog.d("BLORG_UPDATE: Server version = " + latestVersionCode + ", Current version = " + currentVersionCode);
+
+                        if (latestVersionCode > currentVersionCode) {
+                            TLRPC.TL_help_appUpdate update = new TLRPC.TL_help_appUpdate();
+                            update.version = String.valueOf(latestVersionCode);
+                            update.text = "A new version of BLORG v" + latestVersionCode + " has been released!\n\nClick «Download» to install the update.";
+                            update.document = null;
+
+                            AndroidUtilities.runOnUIThread(() -> {
+                                SharedConfig.pendingAppUpdate = update;
+                                SharedConfig.saveConfig();
+                                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.appUpdateAvailable);
+
+                                showSystemNotification(latestVersionCode);
+
+                                Activity currentActivity = AndroidUtilities.findActivity(ApplicationLoader.applicationContext);
+                                if (currentActivity != null && !currentActivity.isFinishing()) {
+                                    new UpdateAppAlertDialog(currentActivity, update, UserConfig.selectedAccount).show();
+                                }
+                            });
+                        } else {
+                            FileLog.d("BLORG_UPDATE: App is up to date.");
+                        }
+                    }
+                }
+                connection.disconnect();
+            } catch (Throwable e) {
+                FileLog.e("BLORG_UPDATE: Error checking for updates", e);
+            }
+        });
+    }
+
+    private void showSystemNotification(int versionCode) {
+        try {
+            Context context = ApplicationLoader.applicationContext;
+            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            String channelId = "blorg_updates_channel";
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel channel = new NotificationChannel(
+                    channelId, 
+                    "BLORG Updates", 
+                    NotificationManager.IMPORTANCE_DEFAULT
+                );
+                notificationManager.createNotificationChannel(channel);
+            }
+
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.BLORG_DOWNLOAD_URL));
+            PendingIntent pendingIntent = PendingIntent.getActivity(
+                context, 0, intent, 
+                PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0)
+            );
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(R.drawable.notification)
+                .setContentTitle("BLORG Update")
+                .setContentText("A new version of BLORG v" + versionCode + " is available! Tap to download.")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true);
+
+            notificationManager.notify(1001, builder.build());
+        } catch (Throwable e) {
+            FileLog.e(e);
+        }
     }
 
     protected void appCenterLogInternal(Throwable e) {

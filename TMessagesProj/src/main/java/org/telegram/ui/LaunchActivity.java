@@ -232,6 +232,9 @@ import org.telegram.ui.bots.BotWebViewAttachedSheet;
 import org.telegram.ui.bots.BotWebViewSheet;
 import org.telegram.ui.bots.WebViewRequestProps;
 import org.webrtc.voiceengine.WebRtcAudioTrack;
+import org.telegram.blorg.discovery.Discovery;
+
+import org.telegram.ui.Components.UpdateAppAlertDialog;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -702,7 +705,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         }
         MediaController.getInstance().setBaseActivity(this, true);
         ApplicationLoader.startAppCenter(this);
-
+        if (ApplicationLoader.isStandaloneBuild()) {
+            ApplicationLoader.checkForUpdates();
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             FingerprintController.checkKeyReady();
         }
@@ -1518,6 +1523,17 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     @SuppressLint("Range")
     private boolean handleIntent(Intent intent, boolean isNew, boolean restore, boolean fromPassword, Browser.Progress progress, boolean rebuildFragments, boolean openedTelegram) {
+        if (intent != null){
+            Uri data = intent.getData();
+
+            if (data != null && !Discovery.allowTelegramLinks()) {
+                boolean[] forceBrowser = new boolean[]{false};
+
+                if (Browser.isInternalUri(data, forceBrowser)) {
+                    intent.setData(null);
+                }
+            }
+        }
         if (GiftInfoBottomSheet.handleIntent(intent, progress)) {
             return true;
         }
@@ -4899,6 +4915,14 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         boolean hideProgressDialog = true;
                         if (error == null && actionBarLayout != null) {
                             TLRPC.ChatInvite invite = (TLRPC.ChatInvite) response;
+                            if (invite instanceof TLRPC.TL_chatInvite && ((TLRPC.TL_chatInvite) invite).request_needed && !Discovery.allowRequestsJoin()) {
+                                try {
+                                    dismissLoading.run();
+                                } catch (Exception e) {
+                                    FileLog.e(e);
+                                }
+                                return;
+                            }
                             if (invite.chat != null && (!ChatObject.isLeftFromChat(invite.chat) || !invite.chat.kicked && (ChatObject.isPublic(invite.chat) || invite instanceof TLRPC.TL_chatInvitePeek || invite.chat.has_geo))) {
                                 MessagesController.getInstance(intentAccount).putChat(invite.chat, false);
                                 ArrayList<TLRPC.Chat> chats = new ArrayList<>();
@@ -7062,6 +7086,13 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         //if (refreshRateController != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         //    refreshRateController.start();
         //}
+        if (SharedConfig.pendingAppUpdate != null) {
+            try {
+                new UpdateAppAlertDialog(this, SharedConfig.pendingAppUpdate, currentAccount).show();
+            } catch (Throwable e) {
+                FileLog.e(e);
+            }
+        }
     }
 
     public static Runnable whenResumed;

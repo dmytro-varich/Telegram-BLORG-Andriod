@@ -74,6 +74,7 @@ import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.TextStyleSpan;
 import org.telegram.ui.bots.BotBiometry;
 import org.telegram.ui.bots.BotBiometrySettings;
+import org.telegram.blorg.discovery.Discovery;
 
 import java.util.ArrayList;
 
@@ -721,7 +722,11 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         } else {
             emailLoginRow = -1;
         }
-        blockedRow = rowCount++;
+        if (Discovery.showBlockedUsersSection()) {
+            blockedRow = rowCount++;
+        } else {
+            blockedRow = -1;
+        }
         if (currentPassword != null) {
             boolean hasEmail = currentPassword.login_email_pattern != null;
             if (SharedConfig.hasEmailLogin != hasEmail) {

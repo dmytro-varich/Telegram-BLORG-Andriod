@@ -23,6 +23,9 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.IUpdateLayout;
 
+import org.telegram.messenger.web.BuildConfig;
+import org.telegram.messenger.ApplicationLoaderImpl;
+
 import java.io.File;
 
 public class UpdateLayout extends IUpdateLayout {
@@ -43,7 +46,7 @@ public class UpdateLayout extends IUpdateLayout {
 
     public void updateFileProgress(Object[] args) {
         if (updateTextView == null || args == null) return;
-        if (SharedConfig.isAppUpdateAvailable()) {
+        if (SharedConfig.isAppUpdateAvailable() && SharedConfig.pendingAppUpdate != null && SharedConfig.pendingAppUpdate.document != null) {
             String location = (String) args[0];
             String fileName = FileLoader.getAttachFileName(SharedConfig.pendingAppUpdate.document);
             if (fileName != null && fileName.equals(location)) {
@@ -65,18 +68,26 @@ public class UpdateLayout extends IUpdateLayout {
         updateLayout.setTranslationY(dp(44));
         updateLayout.setBackground(Theme.getSelectorDrawable(0x40ffffff, false));
         sideMenuContainer.addView(updateLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 44, Gravity.LEFT | Gravity.BOTTOM));
+        
         updateLayout.setOnClickListener(v -> {
-            if (!SharedConfig.isAppUpdateAvailable()) {
+            if (!SharedConfig.isAppUpdateAvailable() || SharedConfig.pendingAppUpdate == null) {
                 return;
             }
-            if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_DOWNLOAD) {
-                FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
-                updateAppUpdateViews(currentAccount,  true);
-            } else if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_CANCEL) {
-                FileLoader.getInstance(currentAccount).cancelLoadFile(SharedConfig.pendingAppUpdate.document);
-                updateAppUpdateViews(currentAccount, true);
-            } else {
-                AndroidUtilities.openForView(SharedConfig.pendingAppUpdate.document, true, activity);
+
+            if (activity != null) {
+                new UpdateAppAlertDialog(activity, SharedConfig.pendingAppUpdate, currentAccount).show();
+            }
+
+            if (SharedConfig.pendingAppUpdate.document != null) {
+                if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_DOWNLOAD) {
+                    FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
+                    updateAppUpdateViews(currentAccount, true);
+                } else if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_CANCEL) {
+                    FileLoader.getInstance(currentAccount).cancelLoadFile(SharedConfig.pendingAppUpdate.document);
+                    updateAppUpdateViews(currentAccount, true);
+                } else {
+                    AndroidUtilities.openForView(SharedConfig.pendingAppUpdate.document, true, activity);
+                }
             }
         });
 
@@ -127,27 +138,34 @@ public class UpdateLayout extends IUpdateLayout {
         if (SharedConfig.isAppUpdateAvailable()) {
             createUpdateUI(currentAccount);
 
-            String fileName = FileLoader.getAttachFileName(SharedConfig.pendingAppUpdate.document);
-            File path = FileLoader.getInstance(currentAccount).getPathToAttach(SharedConfig.pendingAppUpdate.document, true);
-            boolean showSize;
-            if (path.exists()) {
-                updateLayoutIcon.setIcon(MediaActionDrawable.ICON_UPDATE, true, animated);
-                setUpdateText(LocaleController.getString(R.string.AppUpdateNow), animated);
-                showSize = false;
+            if (SharedConfig.pendingAppUpdate == null || SharedConfig.pendingAppUpdate.document == null) {
+                updateLayoutIcon.setIcon(MediaActionDrawable.ICON_DOWNLOAD, true, animated);
+                setUpdateText("BLORG Update Available", animated);
+                updateSizeTextView.setText(null, animated);
             } else {
-                if (FileLoader.getInstance(currentAccount).isLoadingFile(fileName)) {
-                    updateLayoutIcon.setIcon(MediaActionDrawable.ICON_CANCEL, true, animated);
-                    updateLayoutIcon.setProgress(0, false);
-                    Float p = ImageLoader.getInstance().getFileProgress(fileName);
-                    setUpdateText(LocaleController.formatString(R.string.AppUpdateDownloading, (int) ((p != null ? p : 0.0f) * 100)), animated);
+                String fileName = FileLoader.getAttachFileName(SharedConfig.pendingAppUpdate.document);
+                File path = FileLoader.getInstance(currentAccount).getPathToAttach(SharedConfig.pendingAppUpdate.document, true);
+                boolean showSize;
+                if (path.exists()) {
+                    updateLayoutIcon.setIcon(MediaActionDrawable.ICON_UPDATE, true, animated);
+                    setUpdateText(LocaleController.getString(R.string.AppUpdateNow), animated);
                     showSize = false;
                 } else {
-                    updateLayoutIcon.setIcon(MediaActionDrawable.ICON_DOWNLOAD, true, animated);
-                    setUpdateText(LocaleController.getString(R.string.AppUpdate), animated);
-                    showSize = true;
+                    if (FileLoader.getInstance(currentAccount).isLoadingFile(fileName)) {
+                        updateLayoutIcon.setIcon(MediaActionDrawable.ICON_CANCEL, true, animated);
+                        updateLayoutIcon.setProgress(0, false);
+                        Float p = ImageLoader.getInstance().getFileProgress(fileName);
+                        setUpdateText(LocaleController.formatString(R.string.AppUpdateDownloading, (int) ((p != null ? p : 0.0f) * 100)), animated);
+                        showSize = false;
+                    } else {
+                        updateLayoutIcon.setIcon(MediaActionDrawable.ICON_DOWNLOAD, true, animated);
+                        setUpdateText(LocaleController.getString(R.string.AppUpdate), animated);
+                        showSize = true;
+                    }
                 }
+                updateSizeTextView.setText(showSize ? AndroidUtilities.formatFileSize(SharedConfig.pendingAppUpdate.document.size) : null, animated);
             }
-            updateSizeTextView.setText(showSize ? AndroidUtilities.formatFileSize(SharedConfig.pendingAppUpdate.document.size) : null, animated);
+
             if (updateLayout.getTag() != null) {
                 return;
             }

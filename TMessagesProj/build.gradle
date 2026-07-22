@@ -123,6 +123,17 @@ android {
                 arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21' //, '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
             }
         }
+
+        Properties properties = new Properties()
+        if (project.rootProject.file('local.properties').exists()) {
+            properties.load(project.rootProject.file('local.properties').newDataInputStream())
+        }
+
+        def appId = properties.getProperty('telegram.app_id') ?: "4"
+        def appHash = properties.getProperty('telegram.app_hash') ?: "\"014b35b6184100b085b0d0572f9b5103\""
+
+        buildConfigField "int", "TELEGRAM_APP_ID", appId
+        buildConfigField "String", "TELEGRAM_APP_HASH", appHash
     }
 
     buildTypes {

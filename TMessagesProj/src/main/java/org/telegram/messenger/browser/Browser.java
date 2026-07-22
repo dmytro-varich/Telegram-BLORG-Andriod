@@ -51,6 +51,7 @@ import org.telegram.ui.ActionBar.BottomSheetTabs;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.BubbleActivity;
 import org.telegram.ui.LaunchActivity;
+import org.telegram.blorg.discovery.Discovery;
 
 import java.lang.ref.WeakReference;
 import java.net.IDN;
@@ -295,6 +296,9 @@ public class Browser {
         final int currentAccount = UserConfig.selectedAccount;
         boolean[] forceBrowser = new boolean[]{false};
         boolean internalUri = isInternalUri(uri, forceBrowser);
+        if (internalUri && !Discovery.allowTelegramLinks()) {
+            return;
+        }
         String browserPackage = getBrowserPackageName(browser);
         if (browserPackage != null) {
             tryTelegraph = false;

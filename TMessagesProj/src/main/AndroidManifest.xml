@@ -110,6 +110,8 @@
         tools:replace="android:supportsRtl"
         android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true"
+        android:icon="@mipmap/ic_blorg_launcher"
+        android:roundIcon="@mipmap/ic_blorg_launcher"
     >
         <!-- usesCleartextTraffic for browser supporting opening http:// links -->
 
@@ -117,7 +119,9 @@
             android:enabled="true"
             android:name="org.telegram.messenger.DefaultIcon"
             android:targetActivity="org.telegram.ui.LaunchActivity"
-            android:exported="true">
+            android:exported="true"
+            android:icon="@mipmap/ic_blorg_launcher"
+            android:roundIcon="@mipmap/ic_blorg_launcher">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -127,7 +131,7 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity-alias>
 
-        <activity-alias
+        <!-- <activity-alias
             android:enabled="false"
             android:name="org.telegram.messenger.VintageIcon"
             android:targetActivity="org.telegram.ui.LaunchActivity"
@@ -205,7 +209,7 @@
                 <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
             </intent-filter>
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
-        </activity-alias>
+        </activity-alias> -->
 
         <activity
             android:name="org.telegram.ui.LaunchActivity"

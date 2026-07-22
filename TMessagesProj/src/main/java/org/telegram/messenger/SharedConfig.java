@@ -768,18 +768,22 @@ public class SharedConfig {
     }
 
     public static boolean isAppUpdateAvailable() {
-        if (pendingAppUpdate == null || pendingAppUpdate.document == null || !ApplicationLoader.isStandaloneBuild()) {
+        // if (pendingAppUpdate == null || pendingAppUpdate.document == null || !ApplicationLoader.isStandaloneBuild()) {
+        //     return false;
+        // }
+        // int currentVersion;
+        // try {
+        //     PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
+        //     currentVersion = pInfo.versionCode;
+        // } catch (Exception e) {
+        //     FileLog.e(e);
+        //     currentVersion = buildVersion();
+        // }
+        // return pendingAppUpdateBuildVersion == currentVersion;
+        if (pendingAppUpdate == null || !ApplicationLoader.isStandaloneBuild()) {
             return false;
         }
-        int currentVersion;
-        try {
-            PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
-            currentVersion = pInfo.versionCode;
-        } catch (Exception e) {
-            FileLog.e(e);
-            currentVersion = buildVersion();
-        }
-        return pendingAppUpdateBuildVersion == currentVersion;
+        return true;
     }
 
     public static boolean setNewAppVersionAvailable(TLRPC.TL_help_appUpdate update) {

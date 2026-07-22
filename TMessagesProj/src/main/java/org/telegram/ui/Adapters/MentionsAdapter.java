@@ -69,6 +69,7 @@ import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.EmojiView;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.blorg.discovery.Discovery;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -1123,7 +1124,7 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
                 delegate.needChangePanelVisibility(false);
                 visibleByStickersSearch = false;
             }
-        } else if (!usernameOnly && needBotContext && text.charAt(0) == '@') {
+        } else if (!usernameOnly && needBotContext && Discovery.allowInlineBots() && text.charAt(0) == '@') {
             int index = text.indexOf(' ');
             int len = text.length();
             String username = null;

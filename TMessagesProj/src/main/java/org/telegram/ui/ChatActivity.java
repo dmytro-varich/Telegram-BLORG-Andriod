@@ -323,6 +323,7 @@ import org.telegram.ui.iv.ChatAttachAlertRichLayout;
 import org.telegram.ui.iv.RichEditor;
 import org.telegram.ui.iv.RichEditorListView;
 import org.telegram.ui.iv.RichHtml;
+import org.telegram.blorg.discovery.Discovery;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -44370,6 +44371,9 @@ public class ChatActivity extends BaseFragment implements
     }
 
     public void didLongPressUsername(ChatMessageCell cell, CharacterStyle link, String username) {
+        if (!Discovery.allowResolveUsername() || !Discovery.allowMentions() || !Discovery.allowTelegramLinks()) {
+            return;
+        }
         final Browser.Progress progress = makeProgressForLink(cell, link);
         TLObject cachedObject = getMessagesController().getUserOrChat(username);
         Utilities.Callback2<TLObject, Boolean> open = (obj, selling) -> {

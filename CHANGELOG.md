@@ -1,6 +1,6 @@
 # Changelog
 
-## v2026.07.20.-1130
+## v2026.07.22-2234
 
 - Blocked global search.
 - Blocked inline bot queries from the message input field.

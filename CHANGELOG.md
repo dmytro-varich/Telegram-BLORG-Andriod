@@ -1,5 +1,9 @@
 # Changelog
 
+## v2026.08.07-1538
+
+- Blocked opening forwarded messages.
+
 ## v2026.07.22-2234
 
 - Blocked global search.

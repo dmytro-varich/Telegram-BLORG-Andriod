@@ -324,6 +324,7 @@ import org.telegram.ui.iv.ChatAttachAlertRichLayout;
 import org.telegram.ui.iv.RichEditor;
 import org.telegram.ui.iv.RichEditorListView;
 import org.telegram.ui.iv.RichHtml;
+
 import org.telegram.blorg.discovery.Discovery;
 
 import java.io.BufferedReader;
@@ -44305,9 +44306,6 @@ public class ChatActivity extends BaseFragment implements
         if (messageObject == null) {
             return;
         }
-    }
-
-    public boolean onBackPressed(boolean invoked) {
 
         ArrayList<MessageObject> arrayList = null;
         if (messageObject.getGroupId() != 0) {
@@ -44418,7 +44416,7 @@ public class ChatActivity extends BaseFragment implements
 
     public void didLongPressUsername(ChatMessageCell cell, CharacterStyle link, String username) {
         if (!Discovery.allowResolveUsername() || !Discovery.allowMentions() || !Discovery.allowTelegramLinks()) {
-            return;
+                return;
         }
         final Browser.Progress progress = makeProgressForLink(cell, link);
         TLObject cachedObject = getMessagesController().getUserOrChat(username);

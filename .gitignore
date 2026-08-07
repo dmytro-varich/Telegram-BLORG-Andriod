@@ -12,5 +12,6 @@ TMessagesProj/afat/
 TMessagesProj_App/afat/
 TMessagesProj_AppHockeyApp/afat/
 TMessagesProj_AppStandalone/afat/
-TMessagesProj_AppHuawei/afat/
+TMessagesProj_ApHuawei/afat/
 blorg-release.jks
+TMessagesProj/jni/ffmpeg/build_android

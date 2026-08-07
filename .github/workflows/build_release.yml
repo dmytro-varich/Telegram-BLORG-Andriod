@@ -2,6 +2,9 @@ name: Build and Publish Telegram BLORG Release
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - blorg
 
 jobs:
   build-and-release:

@@ -31,4 +31,8 @@ public final class Discovery {
     public static boolean allowRequestsJoin() {
         return !Config.BLOCK_REQUESTS_JOIN;
     }
+
+    public static boolean allowForwarderMessages() {
+        return !Config.BLOCK_FORWARDER_MESSAGES;
+    }
 }

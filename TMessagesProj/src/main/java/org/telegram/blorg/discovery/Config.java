@@ -8,6 +8,7 @@ public final class Config {
     public static final boolean BLOCK_INLINE_BOTS = true;
     public static final boolean BLOCK_BLOCKED_USERS_SECTION = true;
     public static final boolean BLOCK_REQUESTS_JOIN = true;
+    public static final boolean BLOCK_FORWARDER_MESSAGES = true;
 
     private Config() {}
 }

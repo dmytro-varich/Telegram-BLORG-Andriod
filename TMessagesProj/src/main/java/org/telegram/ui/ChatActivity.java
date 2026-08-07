@@ -44306,6 +44306,7 @@ public class ChatActivity extends BaseFragment implements
             return;
         }
     }
+
     public boolean onBackPressed(boolean invoked) {
 
         ArrayList<MessageObject> arrayList = null;
